@@ -5,8 +5,9 @@
 #include <numeric>
 #include <fstream>
 
-long long fast_power_mod(long long base, long long exponent, long long mod) {
-    long long result = 1;
+template<typename vt>
+vt fast_power_mod(vt base, vt exponent, vt mod) {
+    vt result = 1;
     base %= mod;
 
     while (exponent > 0) {
@@ -21,19 +22,20 @@ long long fast_power_mod(long long base, long long exponent, long long mod) {
     return result;
 }
 
-bool check_prime(long long number, std::size_t iterations = 10) {
-    if (number % 2 == 0) return false;
-    std::srand(time(NULL));
+template<typename vt>
+bool check_prime(vt number, std::size_t iterations = 10) {
+    if (number % 2 == 0) return false; //If it is even it is not prime
+    std::srand(time(NULL)); // New seed for random number generation
 
     for (std::size_t i = 0; i < iterations; i++) {
         int a = rand() % (number - 2) + 2;
 
-        while (std::gcd(a, number) != 1) {
+        while (std::gcd(a, number) != 1) { // It shuold be coprime to number
             a = rand() % (number - 2) + 2;
         }
 
         int d = 0, s = 0;
-        long long copy = number - 1;
+        vt copy = number - 1;
 
         while (copy % 2 == 0) {
             s++;
@@ -42,10 +44,10 @@ bool check_prime(long long number, std::size_t iterations = 10) {
         d = copy;
         
         bool flag = false;
-        long long result = fast_power_mod(a, d, number); // a^d = 1 mod n
+        vt result = fast_power_mod<vt>(a, d, number); // a^d = 1 mod n
 
-        for (long long r = 0; r < s; r++) {
-            long long result1 = fast_power_mod(a, (1 << r) * d, number);
+        for (vt r = 0; r < s; r++) { //a^(2^r * d)= -1 mod n
+            vt result1 = fast_power_mod<vt>(a, (1 << r) * d, number);
             if (result1 == number - 1) {
                 flag = true;
                 break;
