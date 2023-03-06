@@ -1,2 +1,2 @@
-# Algos
-Different algos for fun
+# Maths
+Different algos/pieces of math for fun
