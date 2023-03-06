@@ -1,224 +1,234 @@
-#ifndef POLYNOMIAL_H
-#define POLYNOMIAL_H
+#include "Polynomial.h"
 
-#include <vector>
-#include <string>
-#include <fstream>
-#include <cmath>
+//! Rule of five
 
 template<typename T>
-bool equal(const T& a, const T& b, const double eps=1e-6) {
-    return std::fabs(a - b) < eps;
+polynomial<T>& polynomial<T>::operator=(const polynomial<T>& other) { 
+    coefficients = other.coefficients; 
+    return *this; 
 }
 
 template<typename T>
-class polynomial {
-private:
-    std::vector<T> coefficients;
-public:
-    //! Rule of 5
+polynomial<T>::polynomial(const T& scalar): coefficients(std::vector<T>(1, scalar)) {}
 
-    polynomial& operator=(const polynomial& other) { 
-        coefficients = other.coefficients; 
-        return *this; 
+template<typename T>
+polynomial<T>::polynomial(const std::vector<T>& coefficients): coefficients(coefficients) {}
+
+template<typename T>
+polynomial<T>::polynomial(const polynomial<T>& other) { 
+    *this = other; 
+}
+
+template<typename T>
+polynomial<T>& polynomial<T>::operator=(polynomial<T>&& other) noexcept {
+    if (this != &other) {
+        coefficients = other.coefficients;
+        other.coefficients.clear();
     }
 
-    polynomial(const T& scalar = 1): coefficients(std::vector<T>(1, scalar)) {}
-    explicit polynomial(const std::vector<T>& coefficients): coefficients(coefficients) {}
+    return *this;
+}
 
-    polynomial(const polynomial& other) { 
-        *this = other; 
+template<typename T>
+polynomial<T>::polynomial(polynomial<T>&& other) noexcept { 
+    *this = other;
+}
+
+//! Comparison operators
+
+template<typename T>
+bool polynomial<T>::operator==(const polynomial<T>& other) const {
+    for (std::size_t i = 0; i < coefficients.size(); i++) {
+        if (!equal(coefficients[i], other[i])) return false;
     }
 
-    polynomial& operator=(polynomial&& other) noexcept {
-        if (this != &other) {
-            coefficients = other.coefficients;
-            other.coefficients.clear();
+    return true;
+}
+
+template<typename T>
+bool polynomial<T>::operator!=(const polynomial<T>& other) const {
+    return !(*this == other);
+}
+
+//! Methods and non-arithmetic operators
+
+template<typename T>
+std::size_t polynomial<T>::degree() const {
+    return coefficients.size() - 1;
+}
+
+template<typename T>
+T& polynomial<T>::operator[] (std::size_t index) {
+    return coefficients[index];
+}
+
+template<typename T>
+const T& polynomial<T>::operator[] (std::size_t index) const {
+    return coefficients[index];
+}
+
+template<typename T>
+polynomial<T> polynomial<T>::differentiate() const {
+    polynomial<T> result = *this;
+
+    for (int i = 0; i < coefficients.size() - 1; i++) {
+        result[i] = coefficients[i + 1] * (i + 1);
+    }
+
+    result.coefficients.pop_back();
+
+    return result;
+}
+
+template<typename T>
+polynomial<T> polynomial<T>::integrate(const T& constant) const {
+    polynomial<T> result = *this;
+    result.coefficients.push_back(T(0));
+
+    for (int i = 1; i < coefficients.size() + 1; i++) {
+        result[i] = coefficients[i - 1] / i;
+    }
+
+    result[0] = constant;
+
+    return result;
+}
+
+template<typename T>
+T polynomial<T>::operator() (const T& point) const {
+    T ans = T(0);
+
+    for (int i = coefficients.size() - 1; i >= 0; i--) {
+        ans += coefficients[i];
+
+        if (i >= 1) ans *= point;
+    }
+
+    return ans;
+}
+
+template<typename T>
+std::vector<T>& polynomial<T>::coef() {
+    return coefficients;
+}
+
+template<typename T>
+const std::vector<T>& polynomial<T>::coef() const {
+    return coefficients;
+}
+
+//! Linear in-class opeartors
+
+template<typename T>
+polynomial<T>& polynomial<T>::operator+= (const polynomial<T>& other) {
+    for (int i = 0; i < coefficients.size(); i++) {
+        if (coefficients.size() <= i) coefficients.push_back(T(0));
+
+        coefficients[i] += other[i];
+    }
+
+    int i = coefficients.size() - 1;
+    while (i > 0 && equal(coefficients[i], T(0)) && coefficients.size() > 0) {
+        coefficients.pop_back();
+    }
+
+    if (coefficients.empty()) coefficients.push_back(0);
+
+    return *this;
+}
+
+template <typename T>
+polynomial<T>& polynomial<T>::operator-= (const polynomial<T>& other) {
+    *this = (*this) + (-other);
+    return *this;
+}
+
+template <typename T>
+polynomial<T> polynomial<T>::operator+() const {
+    return *this;
+}
+
+template <typename T>
+polynomial<T> polynomial<T>::operator-() const {
+    polynomial<T> result(*this);
+
+    for (int i = 0; i < coefficients.size(); i++) {
+        result[i] *= -1;
+    }
+
+    return *this;
+}
+
+template <typename T>
+polynomial<T>& polynomial<T>::operator*=(const polynomial<T>& other) {
+    *this = (*this) * other;
+    return *this;
+}
+
+//! Out-of-class operators
+
+template <typename T>
+polynomial<T> operator* (const polynomial<T>& self, const polynomial<T>& other) {
+    polynomial<T> result(T(0));
+    
+    for (int i = 0; i < self.coef().size(); i++) {
+        for (int j = 0; j < other.coef().size(); j++) {
+            int k = i + j;
+            if (result.coef().size() >= k) result.coef().push_back(0);
+
+            result[k] += self[i] * other[j];
         }
-
-        return *this;
     }
 
-    polynomial(polynomial&& other) noexcept { 
-        *this = other;
-    }
+    return result;
+}
 
-    ~polynomial() = default;
+template <typename T>
+polynomial<T> operator+ (const polynomial<T>& self, const polynomial<T>& other) {
+    polynomial result(self);
+    result += other;
+    return result;
+}
 
-    //! Comparison operators
+template<typename T>
+polynomial<T> operator- (const polynomial<T>& self, const polynomial<T>& other) {
+    polynomial result(self);
+    result -= other;
+    return result;
+}
 
-    bool operator==(const polynomial& other) const {
-        for (std::size_t i = 0; i < coefficients.size(); i++) {
-            if (!equal(coefficients[i], other[i])) return false;
-        }
-
-        return true;
-    }
-
-    bool operator!=(const polynomial& other) const {
-        return !(*this == other);
-    }
-
-    //! Methods and non-arithmetic operators
-
-    std::size_t degree() const {
-        return coefficients.size() - 1;
-    }
-
-    T operator[] (std::size_t index) const {
-        if (index >= coefficients.size()) return T(0);
-        return coefficients[index];
-    }
-
-    polynomial differentiate() const {
-        polynomial result = *this;
-
-        for (int i = 0; i < coefficients.size() - 1; i++) {
-            result[i] = coefficients[i + 1] * (i + 1);
-        }
-
-        result.coefficients.pop_back();
-
-        return result;
-    }
-
-    polynomial integrate(const T& constant) const {
-        polynomial result = *this;
-        result.coefficients.push_back(T(0));
-
-        for (int i = 1; i < coefficients.size() + 1; i++) {
-            result[i] = coefficients[i - 1] / i;
-        }
-
-        result[0] = constant;
-
-        return result;
-    }
-
-    T operator() (const T& point) const {
-        T ans = T(0);
-
-        for (int i = coefficients.size() - 1; i >= 0; i--) {
-            ans += coefficients[i];
-
-            if (i >= 1) ans *= point;
-        }
-
-        return ans;
-    }
-
-    //! Linear in-class opeartors
-
-    polynomial& operator+= (const polynomial& other) {
-        for (int i = 0; i < coefficients.size(); i++) {
-            if (coefficients.size() <= i) coefficients.push_back(T(0));
-
-            coefficients[i] += other[i];
-        }
-
-        return *this;
-    }
-
-    polynomial& operator-= (const polynomial& other) {
-        for (int i = 0; i < coefficients.size(); i++) {
-            if (coefficients.size() <= i) coefficients.push_back(T(0));
-
-            coefficients[i] -= other[i];
-        }
-
-        int i = coefficients.size() - 1;
-        while (i > 0 && equal(coefficients[i], T(0)) && coefficients.size() > 0) {
-            coefficients.pop_back();
-        }
-
-        if (coefficients.empty()) coefficients.push_back(0);
-
-        return *this;
-    }
-
-    polynomial operator+() const {
-        return *this;
-    }
-
-    polynomial operator-() const {
-        polynomial result(*this);
-
-        for (int i = 0; i < coefficients.size(); i++) {
-            result[i] *= -1;
-        }
-
-        return *this;
-    }
-
-    polynomial& operator*=(const polynomial& other) {
-        *this = (*this) * other;
-        return *this;
-    }
-
-    //! Out-of-class operators
-
-    friend polynomial operator* (const polynomial& self, const polynomial& other) {
-        polynomial result(0);
-        
-        for (int i = 0; i < self.coefficients.size(); i++) {
-            for (int j = 0; j < other.coefficients.size(); j++) {
-                int k = i + j;
-                if (result.coefficients.size() >= k) result.coefficients.push_back(0);
-
-                result[k] += self[i] * other[j];
-            }
-        }
-
-        return result;
-    }
-
-    friend polynomial operator+ (const polynomial& self, const polynomial& other) {
-        polynomial result(self);
-        result += other;
-        return result;
-    }
-
-    friend polynomial operator- (const polynomial& self, const polynomial& other) {
-        polynomial result(self);
-        result -= other;
-        return result;
-    }
-
-    friend std::ostream& operator<<(std::ostream& out, const polynomial& poly) {
-        if (poly.coefficients.size() == 1) {
-            out << poly[0];
-            return out;
-        }
-
-        bool spaces_needed = false;
-        for (std::size_t i = 0; i < poly.coefficients.size(); i++) {
-            if (equal(poly[i], T(0))) continue;
-
-            if (!i) {
-                out << poly[i];
-                spaces_needed = true;
-            }
-            else {
-                if (spaces_needed) {
-                    if (poly[i] > T(0)) out << " + ";
-                    else out << " - ";
-                }
-
-                T coef = std::fabs(poly[i]);
-
-                if (coef != 1)
-                    out << coef;
-                out << "x";
-
-                spaces_needed = true;
-
-                if (i != 1) out << "^" << i;
-            }
-        }
-
+template<typename T>
+std::ostream& operator<<(std::ostream& out, const polynomial<T>& poly) {
+    if (poly.coef().size() == 1) {
+        out << poly[0];
         return out;
     }
-};
 
+    bool spaces_needed = false;
+    for (std::size_t i = 0; i < poly.coef().size(); i++) {
+        if (equal(poly[i], T(0))) continue;
 
-#endif // POLYNOMIAL_H
+        if (!i) {
+            out << poly[i];
+            spaces_needed = true;
+        }
+        else {
+            if (spaces_needed) {
+                if (poly[i] > T(0)) out << " + ";
+                else out << " - ";
+            }
+
+            T coef = std::fabs(poly[i]);
+
+            if (coef != 1)
+                out << coef;
+            out << "x";
+
+            spaces_needed = true;
+
+            if (i != 1) out << "^" << i;
+        }
+    }
+
+    return out;
+}
