@@ -45,25 +45,73 @@ public:
 
     ~polynomial() = default;
 
+    //! Comparison operators
+
+    bool operator==(const polynomial& other) const {
+        for (std::size_t i = 0; i < coefficients.size(); i++) {
+            if (!equal(coefficients[i], other[i])) return false;
+        }
+
+        return true;
+    }
+
+    bool operator!=(const polynomial& other) const {
+        return !(*this == other);
+    }
+
     //! Methods and non-arithmetic operators
 
-    std::size_t degree() const noexcept {
+    std::size_t degree() const {
         return coefficients.size() - 1;
     }
 
-    T& operator[] (std::size_t index) {
+    T operator[] (std::size_t index) const {
+        if (index >= coefficients.size()) return T(0);
         return coefficients[index];
     }
 
-    const T& operator[] (std::size_t index) const {
-        return coefficients[index];
+    polynomial differentiate() const {
+        polynomial result = *this;
+
+        for (int i = 0; i < coefficients.size() - 1; i++) {
+            result[i] = coefficients[i + 1] * (i + 1);
+        }
+
+        result.coefficients.pop_back();
+
+        return result;
+    }
+
+    polynomial integrate(const T& constant) const {
+        polynomial result = *this;
+        result.coefficients.push_back(T(0));
+
+        for (int i = 1; i < coefficients.size() + 1; i++) {
+            result[i] = coefficients[i - 1] / i;
+        }
+
+        result[0] = constant;
+
+        return result;
+    }
+
+    T operator() (const T& point) const {
+        T ans = T(0);
+
+        for (int i = coefficients.size() - 1; i >= 0; i--) {
+            ans += coefficients[i];
+
+            if (i >= 1) ans *= point;
+        }
+
+        return ans;
     }
 
     //! Linear in-class opeartors
 
     polynomial& operator+= (const polynomial& other) {
         for (int i = 0; i < coefficients.size(); i++) {
-            if (coefficients.size() <= i) coefficients.push_back(0);
+            if (coefficients.size() <= i) coefficients.push_back(T(0));
 
             coefficients[i] += other[i];
         }
@@ -73,13 +121,13 @@ public:
 
     polynomial& operator-= (const polynomial& other) {
         for (int i = 0; i < coefficients.size(); i++) {
-            if (coefficients.size() <= i) coefficients.push_back(0);
+            if (coefficients.size() <= i) coefficients.push_back(T(0));
 
             coefficients[i] -= other[i];
         }
 
         int i = coefficients.size() - 1;
-        while (i > 0 && equal(coefficients[i], 0.0) && coefficients.size() > 0) {
+        while (i > 0 && equal(coefficients[i], T(0)) && coefficients.size() > 0) {
             coefficients.pop_back();
         }
 
@@ -144,17 +192,24 @@ public:
 
         bool spaces_needed = false;
         for (std::size_t i = 0; i < poly.coefficients.size(); i++) {
-            if (equal(poly[i], 0.0)) continue;
+            if (equal(poly[i], T(0))) continue;
 
-            if (!i) out << poly[i];
+            if (!i) {
+                out << poly[i];
+                spaces_needed = true;
+            }
             else {
                 if (spaces_needed) {
-                    if (poly[i] > 0) out << " + ";
+                    if (poly[i] > T(0)) out << " + ";
                     else out << " - ";
                 }
 
                 T coef = std::fabs(poly[i]);
-                out << coef << "x";
+
+                if (coef != 1)
+                    out << coef;
+                out << "x";
+
                 spaces_needed = true;
 
                 if (i != 1) out << "^" << i;
