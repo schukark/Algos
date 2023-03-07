@@ -3,3 +3,5 @@ Primes and number theory/Miller_Rabin_primality_test.exe
 .vscode/settings.json
 Polynomials/Poly_test.exe
 Polynomials/Poly_test.cpp
+Fractions/Fractions_test.cpp
+Fractions/Fractions_test.exe
