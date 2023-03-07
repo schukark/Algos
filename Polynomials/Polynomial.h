@@ -18,7 +18,7 @@ private:
     std::vector<T> coefficients;
 public:
     //! Rule of 5
-    polynomial(const T& scalar = 1);
+    polynomial(const T& scalar);
     polynomial(const std::vector<T>& coefficients);
 
     polynomial(const polynomial& other);
@@ -56,6 +56,8 @@ public:
     polynomial operator-() const;
 
     polynomial& operator*=(const polynomial& other);
+    polynomial& operator/=(const polynomial& other);
+    polynomial& operator%=(const polynomial& other);
 };
 
 #endif // POLYNOMIAL_H

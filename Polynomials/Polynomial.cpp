@@ -165,6 +165,20 @@ polynomial<T>& polynomial<T>::operator*=(const polynomial<T>& other) {
     return *this;
 }
 
+template <typename T>
+polynomial<T> &polynomial<T>::operator/=(const polynomial<T> &other)
+{
+    *this = *this / other;
+    return *this;
+}
+
+template <typename T>
+polynomial<T> &polynomial<T>::operator%=(const polynomial<T> &other)
+{
+    *this = *this - (*this) / other;
+    return *this;
+}
+
 //! Out-of-class operators
 
 template <typename T>
@@ -195,6 +209,32 @@ polynomial<T> operator- (const polynomial<T>& self, const polynomial<T>& other) 
     polynomial result(self);
     result -= other;
     return result;
+}
+
+template<typename T>
+polynomial<T> operator/ (const polynomial<T>& self, const polynomial<T> other) {
+    polynomial<T> tmp= self;
+    polynomial<T> result(std::vector<T>(other.degree() - tmp.degree() + 1));
+
+    while (tmp.degree() >= other.degree()) {
+        int new_degree = tmp.degree() - other.degree();
+        T new_coef = tmp.coef().back() / other.coef().back();
+
+        std::vector<T> new_coefficients(new_degree, 0);
+        new_coefficients.push_back(new_coef);   
+
+        polynomial<T> divisor(new_coefficients);
+        tmp -= divisor * other;
+
+        result[new_degree] = new_coef;
+    }
+
+    return result;
+}
+
+template<typename T>
+polynomial<T> operator% (const polynomial<T>& self, const polynomial<T> other) {
+    return self - (self / other);
 }
 
 template<typename T>
