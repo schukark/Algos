@@ -3,12 +3,6 @@
 //! Rule of five
 
 template<typename T>
-polynomial<T>& polynomial<T>::operator=(const polynomial<T>& other) { 
-    coefficients = other.coefficients; 
-    return *this; 
-}
-
-template<typename T>
 polynomial<T>::polynomial(const T& scalar): coefficients(std::vector<T>(1, scalar)) {}
 
 template<typename T>
@@ -17,6 +11,17 @@ polynomial<T>::polynomial(const std::vector<T>& coefficients): coefficients(coef
 template<typename T>
 polynomial<T>::polynomial(const polynomial<T>& other) { 
     *this = other; 
+}
+
+template<typename T>
+polynomial<T>::polynomial(polynomial<T>&& other) noexcept { 
+    *this = other;
+}
+
+template<typename T>
+polynomial<T>& polynomial<T>::operator=(const polynomial<T>& other) { 
+    coefficients = other.coefficients; 
+    return *this; 
 }
 
 template<typename T>
@@ -29,17 +34,14 @@ polynomial<T>& polynomial<T>::operator=(polynomial<T>&& other) noexcept {
     return *this;
 }
 
-template<typename T>
-polynomial<T>::polynomial(polynomial<T>&& other) noexcept { 
-    *this = other;
-}
-
 //! Comparison operators
 
 template<typename T>
 bool polynomial<T>::operator==(const polynomial<T>& other) const {
+    if (coefficients.size() != other.coefficients.size()) return false;
+
     for (std::size_t i = 0; i < coefficients.size(); i++) {
-        if (!equal(coefficients[i], other[i])) return false;
+        if (coefficients[i] != other[i]) return false;
     }
 
     return true;
@@ -128,11 +130,12 @@ polynomial<T>& polynomial<T>::operator+= (const polynomial<T>& other) {
     }
 
     int i = coefficients.size() - 1;
-    while (i > 0 && equal(coefficients[i], T(0)) && coefficients.size() > 0) {
+    while (i > 0 && i < coefficients.size() && coefficients[i] == T(0)) {
         coefficients.pop_back();
+        i--;
     }
 
-    if (coefficients.empty()) coefficients.push_back(0);
+    if (coefficients.empty()) coefficients = std::vector<T>({T(0)});
 
     return *this;
 }
@@ -156,7 +159,7 @@ polynomial<T> polynomial<T>::operator-() const {
         result[i] *= -1;
     }
 
-    return *this;
+    return result;
 }
 
 template <typename T>
@@ -175,7 +178,7 @@ polynomial<T> &polynomial<T>::operator/=(const polynomial<T> &other)
 template <typename T>
 polynomial<T> &polynomial<T>::operator%=(const polynomial<T> &other)
 {
-    *this = *this - (*this) / other;
+    *this = *this % other;
     return *this;
 }
 
@@ -213,8 +216,8 @@ polynomial<T> operator- (const polynomial<T>& self, const polynomial<T>& other) 
 
 template<typename T>
 polynomial<T> operator/ (const polynomial<T>& self, const polynomial<T> other) {
-    polynomial<T> tmp= self;
-    polynomial<T> result(std::vector<T>(other.degree() - tmp.degree() + 1));
+    polynomial<T> tmp = self;
+    polynomial<T> result(std::vector<T>(tmp.degree() - other.degree() + 1, 0));
 
     while (tmp.degree() >= other.degree()) {
         int new_degree = tmp.degree() - other.degree();
@@ -224,7 +227,7 @@ polynomial<T> operator/ (const polynomial<T>& self, const polynomial<T> other) {
         new_coefficients.push_back(new_coef);   
 
         polynomial<T> divisor(new_coefficients);
-        tmp -= divisor * other;
+        tmp -= (divisor * other);
 
         result[new_degree] = new_coef;
     }
@@ -234,41 +237,58 @@ polynomial<T> operator/ (const polynomial<T>& self, const polynomial<T> other) {
 
 template<typename T>
 polynomial<T> operator% (const polynomial<T>& self, const polynomial<T> other) {
-    return self - (self / other);
+    return self - (self / other) * other;
 }
 
 template<typename T>
 std::ostream& operator<<(std::ostream& out, const polynomial<T>& poly) {
-    if (poly.coef().size() == 1) {
-        out << poly[0];
-        return out;
-    }
+    bool spaces = true;
 
-    bool spaces_needed = false;
-    for (std::size_t i = 0; i < poly.coef().size(); i++) {
-        if (equal(poly[i], T(0))) continue;
+    for (int i = 0; i < poly.coef().size(); i++) {
+        if (poly[i] == 0) continue;
 
-        if (!i) {
+        if (i == 0) {
             out << poly[i];
-            spaces_needed = true;
+            continue;
         }
-        else {
-            if (spaces_needed) {
-                if (poly[i] > T(0)) out << " + ";
-                else out << " - ";
-            }
-
-            T coef = std::fabs(poly[i]);
-
-            if (coef != 1)
-                out << coef;
-            out << "x";
-
-            spaces_needed = true;
-
-            if (i != 1) out << "^" << i;
+        if (spaces) {
+            if (poly[i] > 0) out << " + ";
+            else out << " - ";
         }
+
+        spaces = false;
+
+        T coef = (poly[i] > 0 ? poly[i] : -poly[i]);
+
+        if (coef != 1)
+            out << coef;
+        out << "x";
+
+        if (i == 1) continue;
+
+        out << "^" << i;
     }
 
     return out;
+}
+
+template<typename T>
+polynomial<T> gcd(polynomial<T> self, polynomial<T> other) {
+    while (true) {
+        //std::cout << self << " " << self.degree() << std::endl << other << " " << other.degree() << std::endl;
+        if ((self % other) == polynomial<T>(0)) return other;
+        else if ((self % other).degree() == 0) return polynomial<T>(T(1));
+
+        if (self.degree() < other.degree()) {
+            polynomial<T> tmp = self;
+            self = other;
+            other = tmp;
+        }
+
+        polynomial<T> remainder = self % other;
+        self = other;
+        other = remainder;
+    }
+
+    return polynomial<T>(T(1));
 }

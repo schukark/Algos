@@ -40,10 +40,13 @@ public:
 
     //! Arithmetic in-class operators
 
-    fraction operator+=(const fraction& other) const;
-    fraction operator-=(const fraction& other) const;
-    fraction operator*=(const fraction& other) const;
-    fraction operator/=(const fraction& other) const;
+    fraction operator+=(const fraction& other);
+    fraction operator-=(const fraction& other);
+    fraction operator*=(const fraction& other);
+    fraction operator/=(const fraction& other);
+
+    fraction operator-() const;
+    fraction operator+() const;
 
     //! Different methods
 

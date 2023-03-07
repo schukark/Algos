@@ -7,8 +7,8 @@ number_field<p>::number_field(): number(0) {}
 
 template <std::size_t p>
 number_field<p>::number_field(int _number) {
-    if (_number > 0) number = _number % p;
-    else number = p - (std::abs(_number) % p);
+    if (_number >= 0) number = _number % p;
+    else number = p - (abs(_number) % p);
 }
 
 template<std::size_t p>
@@ -62,7 +62,7 @@ bool number_field<p>::operator==(const number_field<p>& other) const {
 
 template<std::size_t p>
 bool number_field<p>::operator!=(const number_field<p>& other) const {
-    return !(other != *this);
+    return !(other == *this);
 }
 
 //! In-class arithmetic operators
@@ -95,6 +95,16 @@ template<std::size_t p>
 number_field<p>& number_field<p>::operator/=(const number_field<p>& other) {
     *this *= other.inverse();
     return *this;
+}
+
+template <std::size_t p>
+number_field<p> number_field<p>::operator+() const {
+    return number_field();
+}
+
+template <std::size_t p>
+number_field<p> number_field<p>::operator-() const {
+    return number_field(-number);
 }
 
 //! Methods

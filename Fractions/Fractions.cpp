@@ -10,16 +10,31 @@ fraction<T>::fraction(T scalar): numerator(scalar), denominator(T(1)) {}
 
 template <class T>
 fraction<T>::fraction(T numerator, T denominator): numerator(numerator), denominator(denominator) {
-    T tmp = std::gcd(numerator, denominator);
-    numerator /= tmp;
-    denominator /= tmp;
+    T tmp = std::gcd(std::abs(numerator), std::abs(denominator));
+    if (tmp != T(0)) {
+        numerator /= tmp;
+        denominator /= tmp;
+    }
+
+    if (denominator < 0) {
+        numerator *= -1;
+        denominator *= -1;
+    }
 }
 
 template <class T>
 fraction<T>::fraction(const fraction<T>& other): numerator(other.numerator), denominator(other.denominator) {}
 
 template <class T>
-fraction<T>::fraction(fraction<T>&& other) noexcept: numerator(other.numerator), denominator(other.denominator) {}
+fraction<T>::fraction(fraction<T>&& other) noexcept {
+    if (this != &other) {
+        numerator = other.numerator;
+        denominator = other.denominator;
+
+        other.numerator = 0;
+        other.denominator = 1;
+    }
+}
 
 template <class T>
 fraction<T>& fraction<T>::operator=(const fraction<T>& other) {
@@ -31,8 +46,13 @@ fraction<T>& fraction<T>::operator=(const fraction<T>& other) {
 
 template <class T>
 fraction<T>& fraction<T>::operator=(fraction<T>&& other) noexcept {
-    numerator = other.numerator;
-    denominator = other.denominator;
+    if (this != &other) {
+        numerator = other.numerator;
+        denominator = other.denominator;
+
+        other.numerator = 0;
+        other.denominator = 1;
+    }
 
     return *this;
 }
@@ -46,67 +66,65 @@ bool fraction<T>::operator<(const fraction<T>& other) const { // a/b compated to
 }
 
 template<class T>
-bool fraction<T>::operator>(const fraction<T>& other) const { // a/b compated to c/d <=> a/b - c/d compated to 0 <=> (ad - bc) / bd compated to 0
+bool fraction<T>::operator>(const fraction<T>& other) const {
     return other < *this;
 }
 
 template<class T>
-bool fraction<T>::operator<=(const fraction<T>& other) const { // a/b compated to c/d <=> a/b - c/d compated to 0 <=> (ad - bc) / bd compated to 0
+bool fraction<T>::operator<=(const fraction<T>& other) const {
     return !(*this > other);
 }
 
 template<class T>
-bool fraction<T>::operator>=(const fraction<T>& other) const { // a/b compated to c/d <=> a/b - c/d compated to 0 <=> (ad - bc) / bd compated to 0
+bool fraction<T>::operator>=(const fraction<T>& other) const {
     return !(*this < other);
 }
 
 template<class T>
-bool fraction<T>::operator==(const fraction<T>& other) const { // a/b compated to c/d <=> a/b - c/d compated to 0 <=> (ad - bc) / bd compated to 0
+bool fraction<T>::operator==(const fraction<T>& other) const {
     return (*this >= other) && (*this <= other);
 }
 
 template<class T>
-bool fraction<T>::operator!=(const fraction<T>& other) const { // a/b compated to c/d <=> a/b - c/d compated to 0 <=> (ad - bc) / bd compated to 0
+bool fraction<T>::operator!=(const fraction<T>& other) const {
     return !(*this == other);
 }
 
 template<class T>
-fraction<T> fraction<T>::operator+=(const fraction<T>& other) const {
-    T result_num = numerator * other.denominator + denominator * other.numerator;
-    T result_den = denominator * other.denominator;
-
-    *this = fraction<T>(result_num, result_den);
+fraction<T> fraction<T>::operator+=(const fraction<T>& other) {
+    *this = *this + other;
 
     return *this;
 }
 
 template<class T>
-fraction<T> fraction<T>::operator-=(const fraction<T>& other) const {
-    T result_num = numerator * other.denominator - denominator * other.numerator;
-    T result_den = denominator * other.denominator;
-
-    *this = fraction<T>(result_num, result_den);
+fraction<T> fraction<T>::operator-=(const fraction<T>& other) {
+    *this = *this - other;
     
     return *this;
 }
 
 template<class T>
-fraction<T> fraction<T>::operator*=(const fraction<T>& other) const {
-    T result_num = numerator * other.numerator;
-    T result_den = denominator * other.denominator;
-
-    *this = fraction<T>(result_num, result_den);
+fraction<T> fraction<T>::operator*=(const fraction<T>& other) {
+    *this = *this * other;
     
     return *this;
 }
 
 template<class T>
-fraction<T> fraction<T>::operator/=(const fraction<T>& other) const {
-    T result_num = numerator * other.denominator;
-    T result_den = denominator * other.numerator;
-
-    *this = fraction<T>(result_num, result_den);
+fraction<T> fraction<T>::operator/=(const fraction<T>& other) {
+    *this = *this / other;
     
+    return *this;
+}
+
+template <class T>
+fraction<T> fraction<T>::operator-() const {
+    return fraction<T>(-numerator, denominator);
+}
+
+template <class T>
+fraction<T> fraction<T>::operator+() const {
     return *this;
 }
 
@@ -164,7 +182,7 @@ T fraction<T>::denom() const {
 
 template<class T>
 std::ostream& operator<<(std::ostream& out, const fraction<T>& frac) {
-    if (equal(frac.denom(), T(1))) out << frac.num();
+    if (frac.denom() == T(1)) out << frac.num();
     else out << frac.num() << "/" << frac.denom();
     return out;
 }

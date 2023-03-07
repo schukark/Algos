@@ -8,11 +8,6 @@
 #include <cmath>
 
 template<typename T>
-bool equal(const T& a, const T& b, const double eps=1e-6) {
-    return std::fabs(a - b) < eps;
-}
-
-template<typename T>
 class polynomial {
 private:
     std::vector<T> coefficients;
@@ -29,7 +24,7 @@ public:
 
     ~polynomial() = default;
 
-    //! Comparisonoperators
+    //! Comparison operators
 
     bool operator==(const polynomial& other) const;
     bool operator!=(const polynomial& other) const;

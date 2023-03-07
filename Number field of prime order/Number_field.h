@@ -38,6 +38,9 @@ public:
     number_field& operator-=(const number_field& other);
     number_field& operator/=(const number_field& other);
 
+    number_field operator+() const;
+    number_field operator-() const;
+
     //! Methods
 
     number_field inverse() const;
