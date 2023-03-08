@@ -9,12 +9,12 @@ template <class T>
 fraction<T>::fraction(T scalar): numerator(scalar), denominator(T(1)) {}
 
 template <class T>
-fraction<T>::fraction(T numerator, T denominator): numerator(numerator), denominator(denominator) {
+fraction<T>::fraction(T _numerator, T _denominator): numerator(_numerator), denominator(_denominator) {
     T tmp = std::gcd(std::abs(numerator), std::abs(denominator));
-    if (tmp != T(0)) {
-        numerator /= tmp;
-        denominator /= tmp;
-    }
+    if (tmp == 0) return;
+
+    numerator /= tmp;
+    denominator /= tmp;
 
     if (denominator < 0) {
         numerator *= -1;
@@ -62,7 +62,7 @@ bool fraction<T>::operator<(const fraction<T>& other) const { // a/b compated to
     T result_num = numerator * other.denominator - denominator * other.numerator;
     T result_den = denominator * other.denominator;
 
-    return (result_num > 0) == (result_den > 0);
+    return (result_num < 0) == (result_den > 0);
 }
 
 template<class T>
@@ -154,10 +154,7 @@ fraction<T> operator*(const fraction<T>& self, const fraction<T>& other) {
 
 template<class T>
 fraction<T> operator/(const fraction<T>& self, const fraction<T>& other) {
-    T result_num = self.num() * other.denom();
-    T result_den = self.denom() * other.num();
-    
-    return fraction<T>(result_num, result_den);
+    return self * other.inverse();
 }
 
 template<class T>

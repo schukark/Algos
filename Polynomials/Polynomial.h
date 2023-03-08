@@ -42,6 +42,8 @@ public:
     std::vector<T>& coef();
     const std::vector<T>& coef() const;
 
+    void reduce();
+
     //! Linear in-class opeartors
 
     polynomial& operator+= (const polynomial& other);

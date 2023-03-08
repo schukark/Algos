@@ -119,6 +119,13 @@ const std::vector<T>& polynomial<T>::coef() const {
     return coefficients;
 }
 
+template <typename T>
+void polynomial<T>::reduce() {
+    for (int i = 0; i < coefficients.size(); i++) {
+        coefficients[i] /= coefficients.back();
+    }
+}
+
 //! Linear in-class opeartors
 
 template<typename T>
@@ -242,8 +249,6 @@ polynomial<T> operator% (const polynomial<T>& self, const polynomial<T> other) {
 
 template<typename T>
 std::ostream& operator<<(std::ostream& out, const polynomial<T>& poly) {
-    bool spaces = true;
-
     for (int i = 0; i < poly.coef().size(); i++) {
         if (poly[i] == 0) continue;
 
@@ -251,12 +256,9 @@ std::ostream& operator<<(std::ostream& out, const polynomial<T>& poly) {
             out << poly[i];
             continue;
         }
-        if (spaces) {
-            if (poly[i] > 0) out << " + ";
-            else out << " - ";
-        }
 
-        spaces = false;
+        if (poly[i] > 0) out << " + ";
+        else out << " - ";
 
         T coef = (poly[i] > 0 ? poly[i] : -poly[i]);
 
@@ -276,7 +278,10 @@ template<typename T>
 polynomial<T> gcd(polynomial<T> self, polynomial<T> other) {
     while (true) {
         //std::cout << self << " " << self.degree() << std::endl << other << " " << other.degree() << std::endl;
-        if ((self % other) == polynomial<T>(0)) return other;
+        if ((self % other) == polynomial<T>(0)) {
+            other.reduce();
+            return other;
+        }
         else if ((self % other).degree() == 0) return polynomial<T>(T(1));
 
         if (self.degree() < other.degree()) {
