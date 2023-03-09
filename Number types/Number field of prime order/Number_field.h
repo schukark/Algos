@@ -37,6 +37,7 @@ public:
     number_field& operator*=(const number_field& other);
     number_field& operator-=(const number_field& other);
     number_field& operator/=(const number_field& other);
+    number_field& operator^=(int power);
 
     number_field operator+() const;
     number_field operator-() const;

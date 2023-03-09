@@ -98,6 +98,12 @@ number_field<p>& number_field<p>::operator/=(const number_field<p>& other) {
 }
 
 template <std::size_t p>
+number_field<p> &number_field<p>::operator^=(int power) {
+    *this = (*this) ^ power;
+    return *this;
+}
+
+template <std::size_t p>
 number_field<p> number_field<p>::operator+() const {
     return number_field();
 }
@@ -150,6 +156,19 @@ template<std::size_t p>
 number_field<p> operator/(const number_field<p>& self, const number_field<p>& other) {
     number_field<p> result = self;
     result /= other;
+    return result;
+}
+
+template<std::size_t p>
+number_field<p> operator^(number_field<p> self, int power) {
+    number_field<p> result = number_field<p>(1);
+
+    while (power > 0) {
+        if (power & 1) result *= self;
+        power >>= 1;
+        self *= self;
+    }
+
     return result;
 }
 

@@ -8,11 +8,6 @@
 #include <string>
 
 template<class T>
-bool equal(const T& a, const T& b, const double eps = 1e-6) {
-    return std::fabs(a - b) < eps;
-}
-
-template<class T>
 class fraction {
 private:
     T numerator, denominator;

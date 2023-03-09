@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <cmath>
+#include <fstream>
 
 template<class vt>
 class complex {
@@ -27,6 +28,9 @@ public:
     double length() const;
     complex conjugate() const;
 
+    vt _real() const;
+    vt _imag() const;
+
     std::vector<complex> roots(int n) const;
 
     //! In-class arithmetic operators
@@ -36,10 +40,10 @@ public:
     complex& operator/=(const complex& other);
     complex& operator*=(const complex& other);
 
-    //! Comparison operators
+    complex operator-() const;
+    complex operator+() const;
 
-    bool operator==(const complex& other) const;
-    bool operator!=(const complex& other) const;
+    //! Comparison operators
 };
 
 #endif // COMPLEX_H
