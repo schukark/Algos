@@ -213,7 +213,7 @@ complex<vt> complex<vt>::operator+() const {
 }
 
 template<class vt>
-bool operator>(const complex<vt>& self, int num) {
+bool operator>(const complex<vt>& self, int num) { //only for polynomial printing, this doesn't convey anything
     if (equal(self._real() - num, 0)) return self._imag() > 0;
     return self._real() - num > 0;
 }

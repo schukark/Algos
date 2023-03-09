@@ -251,7 +251,7 @@ template<typename T>
 std::ostream& operator<<(std::ostream& out, const polynomial<T>& poly) {
     bool spaces = false;
     for (int i = 0; i < poly.coef().size(); i++) {
-        if (poly[i] == 0) continue;
+        if (poly[i] == T(0)) continue;
 
         if (i == 0) {
             out << poly[i];
@@ -267,7 +267,7 @@ std::ostream& operator<<(std::ostream& out, const polynomial<T>& poly) {
 
         T coef = (poly[i] > 0 ? poly[i] : -poly[i]);
 
-        if (coef != 1)
+        if (coef != T(1))
             out << coef;
         out << "x";
 
