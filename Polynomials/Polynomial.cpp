@@ -130,7 +130,7 @@ void polynomial<T>::reduce() {
 
 template<typename T>
 polynomial<T>& polynomial<T>::operator+= (const polynomial<T>& other) {
-    for (int i = 0; i < coefficients.size(); i++) {
+    for (int i = 0; i < other.coefficients.size(); i++) {
         if (coefficients.size() <= i) coefficients.push_back(T(0));
 
         coefficients[i] += other[i];
